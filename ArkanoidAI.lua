@@ -29,7 +29,7 @@ local percentile=.3
 local mutation_rate = 1
 local prev_best = 0
 local life = 0
-local max_score = 20000
+local max_score = 50000
 
 function create_member(sz)
 	r='';
@@ -81,6 +81,9 @@ function cross( playx,n_control)
     elseif prev_best ~= best_flag then
     	best_flag = 1;
     end
+    if max_used_control == control_len then
+    	best_flag = 1;
+    end
 
     if best_flag ==1 then
 	    for i=1,l do
@@ -101,21 +104,21 @@ function cross( playx,n_control)
         y=control_len/2
         if k<=50 then
         	if math.random(0,1) ==0 then
-				playx[i][1]=string.sub(playr[p1][1],1,max_used_control)..string.sub(playr[p2][1],max_used_control,control_len);
+				playx[i][1]=string.sub(playr[p1][1],1,max_used_control-2)..string.sub(playr[p2][1],max_used_control-2,control_len);
 			else
-				playx[i][1]=string.sub(playr[p2][1],1,max_used_control)..string.sub(playr[p1][1],max_used_control,control_len);
+				playx[i][1]=string.sub(playr[p2][1],1,max_used_control-2)..string.sub(playr[p1][1],max_used_control-2,control_len);
 			end
         elseif (k>50 and k<=92) then
         	if math.random(0,1) ==0 then
-	        	playx[i][1]=string.sub(playr[p1][1],1,max_used_control)..string.sub(playr[p2][1],1,control_len - max_used_control);
+	        	playx[i][1]=string.sub(playr[p1][1],1,max_used_control-2)..string.sub(playr[p2][1],1,control_len - max_used_control-2);
 			else
-				playx[i][1]=string.sub(playr[p2][1],1,max_used_control)..string.sub(playr[p1][1],1,control_len - max_used_control);
+				playx[i][1]=string.sub(playr[p2][1],1,max_used_control-2)..string.sub(playr[p1][1],1,control_len - max_used_control-2);
 	        end
 	    elseif (k==93) then
-	    	x=math.random(1,control_len-1)
+	    	x=math.random(max_used_control-2,control_len-1)
 	    	playx[i][1]=string.sub(playr[p1][1],1,x)..string.sub(playr[p2][1],x+1,control_len)
 	    elseif (k==94) then
-	    	x=math.random(1,control_len-1)
+	    	x=math.random(max_used_control-2,control_len-1)
 	    	playx[i][1]=string.sub(playr[p2][1],1,x)..string.sub(playr[p1][1],x+1,control_len)
 	    elseif (k==95) then
 	    	x=math.random(1,y-1)
@@ -143,7 +146,7 @@ function cross( playx,n_control)
 	    elseif  (k==100) then
 	    	local s = ""
 	    	local flag_alter = 0
-	    	for z=1,control_len do
+	    	for z=max_used_control-2,control_len do
 	    		if flag_alter == 0 then
 	    			s=s..string.sub(playr[p2][1],z,z)
 	    			flag_alter=1
@@ -226,11 +229,13 @@ while true do
 				gui.text(0, 9, "pop: "..i);
 				gui.text(0,19, "gen: "..gen)
 				gui.text(0,29, "best: "..best_fit)
-				gui.text(0,39, "cntrl: "..controls_used)
-				gui.text(0,49, "mctrl: "..max_used_control)
+				--gui.text(0,39, "cntrl: "..controls_used)
+				--gui.text(0,49, "mctrl: "..max_used_control)
+				gui.text(0,39, "winner: "..tostring(winner[3]))
 				score=memory.readbyte(score_hundred)*100+memory.readbyte(score_tens)*10+memory.readbyte(score_unit);
-				emu.frameadvance()
-				
+				emu.frameadvance();
+
+						
 				if is_dead==0 and dead_flag ==0 then
 					dead_flag=1
 					if controls_used > max_used_control then
@@ -248,7 +253,7 @@ while true do
 		is_dead=memory.readbyte(death_adr);
 		if is_dead~=0 then
 				best_flag = 1;
-			end	
+		end	
 		fitblck =(1-no_blocks/intial_blocks)*100
 		fitscore = (score/max_score)*100
 		fit=(fitscore+fitblck)/2
@@ -258,6 +263,10 @@ while true do
 			best_player=play
 		end
 		if no_blocks == 0 then
+			winner=play
+			winner[3]=true;
+		end
+		if pad_pos>=180 or pad_pos<=10 then
 			winner=play
 			winner[3]=true;
 		end
